@@ -1,0 +1,59 @@
+name: Consultas para Power BI
+
+on:
+  schedule:
+    - cron: '0 8 * * *'  # 3 AM hora Colombia (UTC-5)
+  workflow_dispatch:
+
+env:
+  API_TOKEN: ${{ secrets.API_TOKEN }}
+  API_BASE_URL: ${{ secrets.API_BASE_URL }}
+  WAREHOUSES: '["1145", "1290"]'
+
+jobs:
+  collect-data:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+    
+    - name: Install dependencies
+      run: pip install requests
+
+    - name: Create data directory
+      run: mkdir -p data
+
+    - name: Run data collector
+      run: python api_collector.py
+      env:
+        WAREHOUSES: ${{ env.WAREHOUSES }}
+
+    - name: Verify files
+      run: |
+        echo "=== ARCHIVOS GENERADOS ==="
+        ls -lh data/
+        echo "=== RESUMEN ==="
+        python -c "import json, os; \
+          files = {f: len(json.load(open(f'data/{f}'))) for f in os.listdir('data') if f.endswith('.json')}; \
+          [print(f'{f}: {c} registros') for f, c in files.items()]"
+
+    - name: Commit and push
+      run: |
+        git config --global user.name "GitHub Actions"
+        git config --global user.email "actions@github.com"
+        git add data/
+        git diff --quiet && git diff --staged --quiet || 
+          (git commit -m "Actualización datos: $(date +'%Y-%m-%d %H:%M')" && git push)
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: powerbi-data
+        path: data/*.json
+        retention-days: 3
