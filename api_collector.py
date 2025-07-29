@@ -6,171 +6,159 @@ from datetime import datetime
 from urllib.parse import quote
 
 # ======================================
-# CONFIGURACIÓN (VARIABLES DE ENTORNO)
+# CONFIGURACIÓN (SEGURA CON VARIABLES DE ENTORNO)
 # ======================================
-TOKEN = os.getenv("API_TOKEN")  # Desde GitHub Secrets
-BASE_URL = os.getenv("API_BASE_URL")  # Desde GitHub Secrets
+TOKEN = os.getenv("API_TOKEN")  # Cambiado el nombre del secret
+BASE_URL = os.getenv("API_BASE_URL")  # Cambiado el nombre del secret
 HEADERS = {"token": TOKEN}
-WAREHOUSES = json.loads(os.getenv("WAREHOUSES", '[]'))  # Lista opcional de almacenes
 
-# Configuración de ejecución
+# Configuración de comportamiento
 MAX_RETRIES = 2           # Reintentos por consulta fallida
 REQUEST_DELAY = 30        # Espera entre consultas (segundos)
 RETRY_DELAY = 10          # Espera entre reintentos (segundos)
 
 # ======================================
-# DEFINICIÓN DE CONSULTAS (MODIFICABLE)
+# DEFINICIÓN DE ENDPOINTS
 # ======================================
-QUERIES = [
+ENDPOINTS = {
+    "Consulta_1": "System.MaterialTransactions.List.View1",
+    "Consulta_2": "System.MaterialTransactions.List.View1",
+    "Consulta_3": "System.MaterialTransactions.List.View1",
+}
+
+# ======================================
+# CONFIGURACIÓN DE CONSULTAS (ACTUALIZADA)
+# ======================================
+QUERY_CONFIG = [
     {
-        "id": "Consulta_1",
-        "output_file": "Consulta_1.json",
-        "endpoint": "/System.MaterialTransactions.List.View1",
+        "name": "Consulta_1",
         "params": {
             "orderby": "ctxn_transaction_date desc",
             "take": "30000",
             "where": "ctxn_movement_type ilike '261%25%' and (ctxn_transaction_date > current_date - 120) and ctxn_warehouse_code ilike '1145' and not (ctxn_primary_uom_code ilike 'Und'"
-        },
-        "use_warehouse": True  # Cambiar a True si se requiere filtro por almacén
+        }
     },
     {
-        "id": "Consulta_2",
-        "output_file": "Consulta_2.json",
-        "endpoint": "/System.MaterialTransactions.List.View1",
+        "name": "Consulta_2",
         "params": {
             "orderby": "ctxn_transaction_date desc",
             "take": "30000",
             "where": "ctxn_movement_type ilike '261%25%' and (ctxn_transaction_date > current_date - 120) and ctxn_warehouse_code ilike '1145' and ctxn_primary_uom_code ilike 'Und'"
-        },
-        "use_warehouse": True  # Este sí usa filtro por almacén
+        }
     },
-    {
-        "id": "Consulta_3",
-        "output_file": "Consulta_2.json",
-        "endpoint": "/System.MaterialTransactions.List.View1",
+        {
+        "name": "Consulta_3",
         "params": {
             "orderby": "ctxn_transaction_date desc",
             "take": "30000",
             "where": "ctxn_movement_type ilike '261%25%' and (ctxn_transaction_date > current_date - 120) and ctxn_warehouse_code ilike '1290'"
-        },
-        "use_warehouse": True  # Este sí usa filtro por almacén
+        }
     }
+
 ]
 
 # ======================================
 # FUNCIONES PRINCIPALES (ACTUALIZADAS)
 # ======================================
-def build_query_url(query_config, warehouse=None):
-    """Construye URL con codificación segura y warehouse opcional"""
-    params = query_config["params"].copy()
+def build_url(endpoint, params):
+    """Construye URL con codificación segura"""
+    encoded_params = []
+    for key, value in params.items():
+        str_key = str(key)
+        str_value = str(value)
+        encoded_key = quote(str_key)
+        encoded_value = quote(str_value)
+        encoded_params.append(f"{encoded_key}={encoded_value}")
     
-    # Añade filtro por warehouse si está configurado y se proporciona
-    if query_config.get("use_warehouse", False) and warehouse:
-        if "where" in params:
-            params["where"] = f"{params['where']} and ctxn_warehouse_code ilike '{warehouse}'"
-        else:
-            params["where"] = f"ctxn_warehouse_code ilike '{warehouse}'"
-    
-    # Manejo especial de caracteres en el parámetro where
-    if 'where' in params:
-        params['where'] = params['where'].replace(' ', '%20').replace("'", "%27")
-    
-    # Construye la URL manualmente para mejor control
-    url = f"{BASE_URL}{query_config['endpoint']}?orderby={params['orderby']}&take={params['take']}"
-    if 'where' in params:
-        url += f"&where={params['where']}"
-    
-    return url
+    return f"{BASE_URL}{endpoint}?{'&'.join(encoded_params)}"
 
-def execute_query(query_config, warehouse=None):
-    """Ejecuta consulta con manejo robusto de errores"""
-    url = build_query_url(query_config, warehouse)
-    
+def fetch_api_data(url, query_name):
+    """Obtiene datos con manejo robusto de errores"""
     for attempt in range(MAX_RETRIES + 1):
         try:
-            print(f"\n▶️ Ejecutando {query_config['id']} (Intento {attempt + 1})")
-            if warehouse:
-                print(f"   Almacén: {warehouse}")
-            
+            print(f"\nℹ️  Consultando {query_name} (Intento {attempt + 1}/{MAX_RETRIES + 1})")
             response = requests.get(url, headers=HEADERS, timeout=60)
-            response.raise_for_status()  # Lanza error para códigos 4XX/5XX
+            response.raise_for_status()
             
             data = response.json()
             if not data:
-                print(f"⚠️  {query_config['id']} devolvió datos vacíos")
+                print(f"⚠️  {query_name} devolvió datos vacíos")
                 return None
                 
-            # Añadir metadatos básicos
+            # Convertir a lista de diccionarios (en lugar de DataFrame)
             for item in data:
-                item['_timestamp_carga'] = datetime.now().isoformat()
-                item['_query_id'] = query_config['id']
-                if warehouse:
-                    item['_warehouse'] = warehouse
+                item['load_timestamp'] = datetime.now().isoformat()
+                item['query_name'] = query_name
             
-            print(f"✅ {query_config['id']} - {len(data)} registros obtenidos")
+            print(f"✅ {query_name} - {len(data)} registros obtenidos")
             return data
             
         except requests.exceptions.RequestException as e:
             if attempt == MAX_RETRIES:
-                print(f"❌ {query_config['id']} falló después de {MAX_RETRIES} reintentos: {str(e)}")
+                print(f"❌ {query_name} falló después de {MAX_RETRIES} reintentos: {str(e)}")
                 return None
             print(f"⏳ Esperando {RETRY_DELAY}s antes de reintentar...")
             time.sleep(RETRY_DELAY)
 
-def save_data(data, filename):
-    """Guarda datos en archivo JSON"""
-    if not data:
-        return False
-        
-    try:
-        os.makedirs("data", exist_ok=True)
-        with open(f"data/{filename}", 'w') as f:
-            json.dump(data, f, indent=2)
-        print(f"💾 Datos guardados en data/{filename}")
-        return True
-    except Exception as e:
-        print(f"❌ Error guardando {filename}: {str(e)}")
-        return False
-
 def process_queries():
-    """Orquesta la ejecución de todas las consultas"""
-    print("\n🔷 INICIANDO CONSULTAS PARA POWER BI 🔷")
+    """Procesa todas las consultas"""
+    print("\n🔍 PROCESANDO CONSULTAS")
+    queries_data = {}
+    
+    for config in QUERY_CONFIG:
+        url = build_url(ENDPOINTS[config["name"]], config["params"])
+        data = fetch_api_data(url, config["name"])
+        
+        if data is not None:
+            queries_data[config["name"]] = data
+        
+        if config != QUERY_CONFIG[-1]:
+            print(f"⏳ Pausa de {REQUEST_DELAY}s entre consultas...")
+            time.sleep(REQUEST_DELAY)
+    
+    return queries_data
+
+def save_data(data):
+    """Guarda los datos en archivos JSON"""
+    if not data:
+        print("❌ No hay datos para guardar")
+        return False
+    
+    os.makedirs("data", exist_ok=True)
+    success = True
+    
+    for name, records in data.items():
+        filename = f"data/{name}.json"  # Cambiado a JSON
+        try:
+            with open(filename, 'w') as f:
+                json.dump(records, f, indent=2)
+            size_mb = os.path.getsize(filename) / (1024 * 1024)
+            print(f"💾 {filename} - {len(records)} registros ({size_mb:.2f} MB)")
+        except Exception as e:
+            print(f"❌ Error guardando {filename}: {str(e)}")
+            success = False
+    
+    return success
+
+# ======================================
+# EJECUCIÓN PRINCIPAL
+# ======================================
+def main():
+    """Función principal con manejo estructurado de errores"""
+    print("\n🚀 INICIANDO RECOLECTOR DE DATOS")
     start_time = time.time()
-    has_errors = False
     
     try:
-        for query in QUERIES:
-            # Consultas sin warehouse
-            if not query.get("use_warehouse", False):
-                data = execute_query(query)
-                if data:
-                    save_data(data, query["output_file"])
-                else:
-                    has_errors = True
-            # Consultas con warehouse
-            else:
-                if not WAREHOUSES:
-                    print(f"⚠️ Consulta {query['id']} requiere warehouse pero no hay almacenes configurados")
-                    continue
-                    
-                for warehouse in WAREHOUSES:
-                    data = execute_query(query, warehouse)
-                    if data:
-                        save_data(data, query["output_file"])
-                    else:
-                        has_errors = True
+        queries_data = process_queries()
+        save_data(queries_data)
             
-            # Pausa entre consultas (excepto la última)
-            if query != QUERIES[-1]:
-                time.sleep(REQUEST_DELAY)
+    except Exception as e:
+        print(f"\n💥 ERROR CRÍTICO: {str(e)}")
+        raise
     
     finally:
-        duration = (time.time() - start_time) / 60
-        print(f"\n⏱️ Tiempo total: {duration:.2f} minutos")
-        if has_errors:
-            print("🔴 Finalizado con errores")
-            exit(1)
-        print("🟢 Ejecución completada con éxito")
+        duration = time.time() - start_time
+        print(f"\n⌛ PROCESO COMPLETADO EN {duration:.2f} SEGUNDOS")
 
 if __name__ == "__main__":
-    process_queries()
+    main()
