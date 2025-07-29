@@ -25,9 +25,9 @@ QUERIES = [
         "params": {
             "orderby": "ctxn_transaction_date desc",
             "take": "30000",
-            "where": "ctxn_movement_type ilike '261%25%' and (ctxn_transaction_date > current_date - 120) and ctxn_warehouse_code ilike '{warehouse}' and ctxn_primary_uom_code ilike 'Und'"
+            "where": "ctxn_movement_type ilike '261%25%' and (ctxn_transaction_date > current_date - 120) and ctxn_warehouse_code ilike '1290'"
         },
-        "use_warehouse": True
+        "use_warehouse": False
     },
     {
         "id": "Consulta_2",
@@ -36,9 +36,20 @@ QUERIES = [
         "params": {
             "orderby": "ctxn_transaction_date desc",
             "take": "30000",
-            "where": "ctxn_movement_type ilike '261%25%' and (ctxn_transaction_date > current_date - 120) and ctxn_warehouse_code ilike '{warehouse}'"
+            "where": "ctxn_movement_type ilike '261%25%' and (ctxn_transaction_date > current_date - 120) and ctxn_warehouse_code ilike '1145' and ctxn_primary_uom_code ilike 'Und'"
         },
-        "use_warehouse": True
+        "use_warehouse": False
+    },
+    {
+        "id": "Consulta_3",
+        "output_file": "Consulta_2.json",
+        "endpoint": "/System.MaterialTransactions.List.View1",
+        "params": {
+            "orderby": "ctxn_transaction_date desc",
+            "take": "30000",
+            "where": "ctxn_movement_type ilike '261%25%' and (ctxn_transaction_date > current_date - 120) and ctxn_warehouse_code ilike '1145' and not (ctxn_primary_uom_code ilike 'Und')"
+        },
+        "use_warehouse": False
     }
 ]
 
