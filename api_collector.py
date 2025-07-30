@@ -50,30 +50,33 @@ QUERY_CONFIG = [
 ]
 
 def build_url(endpoint, params):
-    """Construye la URL sin codificar los valores."""
     param_parts = []
     for key, value in params.items():
         param_parts.append(f"{key}={value}")
-    return f"{BASE_URL}{endpoint}?{'&'.join(param_parts)}"
+    url = f"{BASE_URL}{endpoint}?{'&'.join(param_parts)}"
+    return url
 
 def fetch_data(url, name):
+    print(f"\n🔗 URL generada para {name}:\n{url}\n")
     for attempt in range(MAX_RETRIES + 1):
         try:
-            print(f"\n🔎 Consultando {name} (Intento {attempt + 1})")
+            print(f"🔎 Consultando {name} (Intento {attempt + 1}/{MAX_RETRIES + 1})")
             response = requests.get(url, headers=HEADERS, timeout=60)
             response.raise_for_status()
             data = response.json()
             if not data:
-                print(f"⚠️  {name} no devolvió datos.")
+                print(f"⚠️  {name} no devolvió datos (JSON vacío).")
                 return None
             df = pd.json_normalize(data)
             df["load_timestamp"] = datetime.now().isoformat()
             return df
         except requests.exceptions.RequestException as e:
-            print(f"❌ Error en {name}: {e}")
+            print(f"⚠️  Error en {name}: {e}")
             if attempt < MAX_RETRIES:
+                print(f"⏳ Reintentando en {RETRY_DELAY}s...")
                 time.sleep(RETRY_DELAY)
             else:
+                print(f"❌ La consulta {name} fracasó definitivamente.")
                 return None
 
 def save_data(df, name):
