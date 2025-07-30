@@ -27,23 +27,23 @@ QUERY_CONFIG = [
         "name": "Consulta_1",
         "params": {
             "orderby": "ctxn_transaction_date desc",
-            "take": "1000",
-            "where": "ctxn_movement_type ilike '261%%'"  # Corregido el formato del LIKE
+            "take": "30000",
+            "where": "ctxn_movement_type ilike '261%%' and (ctxn_transaction_date > current_date - 120)"  # Corregido el formato del LIKE
         }
     },
     {
         "name": "Consulta_2",
         "params": {
             "orderby": "ctxn_transaction_date desc",
-            "take": "1000",
-            "where": "ctxn_item_code1 ilike '10007411'"
+            "take": "30000",
+            "where": "ctxn_movement_type ilike '261%%' and (ctxn_transaction_date > current_date - 120) and ctxn_warehouse_code ilike '1145' and not (ctxn_primary_uom_code ilike 'Und')'"
         }
     },
     {
         "name": "Consulta_3",
         "params": {
             "orderby": "ctxn_transaction_date desc",
-            "take": "1000",
+            "take": "30000",
             "where": "(ctxn_movement_type ilike '261%%') and (ctxn_transaction_date > current_date - 120) and (ctxn_warehouse_code ilike '1290')"  # Paréntesis añadidos para claridad
         }
     }
@@ -59,7 +59,7 @@ def build_url(endpoint, params):
     return url
 
 def fetch_data(url, name):
-    print(f"\n🔗 URL generada para {name}:\n{url}\n")
+    #print(f"\n🔗 URL generada para {name}:\n{url}\n")
     for attempt in range(MAX_RETRIES + 1):
         try:
             print(f"🔎 Consultando {name} (Intento {attempt + 1}/{MAX_RETRIES + 1})")
