@@ -16,9 +16,9 @@ RETRY_DELAY = 10
 
 # ENDPOINTS como los del ejemplo original
 ENDPOINTS = {
-    "Consulta_1": "/System.MaterialTransactions.List.View1",
-    "Consulta_2": "/System.MaterialTransactions.List.View1",
-    "Consulta_3": "/System.MaterialTransactions.List.View1"
+    "Consulta_1": "System.MaterialTransactions.List.View1",
+    "Consulta_2": "System.MaterialTransactions.List.View1",
+    "Consulta_3": "System.MaterialTransactions.List.View1"
 }
 
 # Configuración de las consultas (ya no parametrizadas por almacén)
