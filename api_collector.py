@@ -59,7 +59,7 @@ def build_url(endpoint, params):
     return url
 
 def fetch_data(url, name):
-    #print(f"\n🔗 URL generada para {name}:\n{url}\n")
+    print(f"\n🔗 URL generada para {name}:\n{url}\n")
     for attempt in range(MAX_RETRIES + 1):
         try:
             print(f"🔎 Consultando {name} (Intento {attempt + 1}/{MAX_RETRIES + 1})")
@@ -105,7 +105,7 @@ def main():
         name = query["name"]
         url = build_url(ENDPOINTS[name], query["params"])
         print(f"\n🔍 Ejecutando consulta: {name}")
-        #print(f"📋 Parámetros: {query['params']}")
+        print(f"📋 Parámetros: {query['params']}")
         df = fetch_data(url, name)
         if df is not None:
             print(f"📊 Datos obtenidos: {len(df)} registros")
