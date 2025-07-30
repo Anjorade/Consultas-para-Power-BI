@@ -36,7 +36,7 @@ QUERY_CONFIG = [
         "params": {
             "orderby": "ctxn_transaction_date desc",
             "take": "30000",
-            "where": "ctxn_movement_type ilike '261%%' and (ctxn_transaction_date > current_date - 120) and ctxn_warehouse_code ilike '1145' and not (ctxn_primary_uom_code ilike 'Und')'"
+            "where": "ctxn_movement_type ilike '261%%' and (ctxn_transaction_date > current_date - 120) and ctxn_warehouse_code ilike '1145' and not (ctxn_primary_uom_code ilike 'Und')"
         }
     },
     {
@@ -105,7 +105,7 @@ def main():
         name = query["name"]
         url = build_url(ENDPOINTS[name], query["params"])
         print(f"\n🔍 Ejecutando consulta: {name}")
-        print(f"📋 Parámetros: {query['params']}")
+        #print(f"📋 Parámetros: {query['params']}")
         df = fetch_data(url, name)
         if df is not None:
             print(f"📊 Datos obtenidos: {len(df)} registros")
