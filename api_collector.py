@@ -14,28 +14,28 @@ MAX_RETRIES = 1
 REQUEST_DELAY = 20
 RETRY_DELAY = 10
 
-# ENDPOINTS como los del ejemplo original
+# ENDPOINTS - Verificar si realmente son todos iguales
 ENDPOINTS = {
     "Consulta_1": "System.MaterialTransactions.List.View1",
     "Consulta_2": "System.MaterialTransactions.List.View1",
     "Consulta_3": "System.MaterialTransactions.List.View1"
 }
 
-# Configuración de las consultas (ya no parametrizadas por almacén)
+# Configuración de las consultas corregidas
 QUERY_CONFIG = [
     {
         "name": "Consulta_1",
         "params": {
             "orderby": "ctxn_transaction_date desc",
-            "take": "30000",
-            "where": "ctxn_movement_type ilike '261%25%'"
+            "take": "1000",
+            "where": "ctxn_movement_type ilike '261%%'"  # Corregido el formato del LIKE
         }
     },
     {
         "name": "Consulta_2",
         "params": {
             "orderby": "ctxn_transaction_date desc",
-            "take": "30000",
+            "take": "1000",
             "where": "ctxn_item_code1 ilike '10007411'"
         }
     },
@@ -43,8 +43,8 @@ QUERY_CONFIG = [
         "name": "Consulta_3",
         "params": {
             "orderby": "ctxn_transaction_date desc",
-            "take": "30000",
-            "where": "ctxn_movement_type ilike '261%25%' and (ctxn_transaction_date > current_date - 120) and ctxn_warehouse_code ilike '1290'"
+            "take": "1000",
+            "where": "(ctxn_movement_type ilike '261%%') and (ctxn_transaction_date > current_date - 120) and (ctxn_warehouse_code ilike '1290')"  # Paréntesis añadidos para claridad
         }
     }
 ]
@@ -52,7 +52,9 @@ QUERY_CONFIG = [
 def build_url(endpoint, params):
     param_parts = []
     for key, value in params.items():
-        param_parts.append(f"{key}={value}")
+        # Codificar valores para URL
+        encoded_value = quote(str(value))
+        param_parts.append(f"{key}={encoded_value}")
     url = f"{BASE_URL}{endpoint}?{'&'.join(param_parts)}"
     return url
 
@@ -64,9 +66,16 @@ def fetch_data(url, name):
             response = requests.get(url, headers=HEADERS, timeout=60)
             response.raise_for_status()
             data = response.json()
+            
+            # Mejor manejo de respuestas vacías o inválidas
             if not data:
                 print(f"⚠️  {name} no devolvió datos (JSON vacío).")
                 return None
+                
+            if isinstance(data, dict) and data.get("error"):
+                print(f"⚠️  Error en {name}: {data.get('error')}")
+                return None
+                
             df = pd.json_normalize(data)
             df["load_timestamp"] = datetime.now().isoformat()
             return df
@@ -78,6 +87,9 @@ def fetch_data(url, name):
             else:
                 print(f"❌ La consulta {name} fracasó definitivamente.")
                 return None
+        except ValueError as e:
+            print(f"⚠️  Error al decodificar JSON en {name}: {e}")
+            return None
 
 def save_data(df, name):
     os.makedirs("data", exist_ok=True)
@@ -92,9 +104,14 @@ def main():
     for query in QUERY_CONFIG:
         name = query["name"]
         url = build_url(ENDPOINTS[name], query["params"])
+        print(f"\n🔍 Ejecutando consulta: {name}")
+        print(f"📋 Parámetros: {query['params']}")
         df = fetch_data(url, name)
         if df is not None:
+            print(f"📊 Datos obtenidos: {len(df)} registros")
             save_data(df, name)
+        else:
+            print(f"❌ No se obtuvieron datos para {name}")
         time.sleep(REQUEST_DELAY)
 
     duration = time.time() - start_time
