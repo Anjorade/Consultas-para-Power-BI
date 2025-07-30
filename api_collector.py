@@ -10,8 +10,8 @@ TOKEN = os.getenv("API_TOKEN")
 BASE_URL = os.getenv("API_BASE_URL")
 HEADERS = {"token": TOKEN}
 
-MAX_RETRIES = 1
-REQUEST_DELAY = 20
+MAX_RETRIES = 0
+REQUEST_DELAY = 15
 RETRY_DELAY = 10
 
 # ENDPOINTS - Verificar si realmente son todos iguales
