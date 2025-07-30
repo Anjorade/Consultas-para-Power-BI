@@ -50,10 +50,10 @@ QUERY_CONFIG = [
 ]
 
 def build_url(endpoint, params):
-    """Construye URL sin codificar los valores de los parámetros."""
+    """Construye la URL sin codificar los valores."""
     param_parts = []
     for key, value in params.items():
-        param_parts.append(f"{quote(str(key))}={value}")
+        param_parts.append(f"{key}={value}")
     return f"{BASE_URL}{endpoint}?{'&'.join(param_parts)}"
 
 def fetch_data(url, name):
