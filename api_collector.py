@@ -50,17 +50,11 @@ QUERY_CONFIG = [
 ]
 
 def build_url(endpoint, params):
-    """Construye URL sin codificar el valor del parámetro 'where'."""
-    encoded_params = []
+    """Construye URL sin codificar los valores de los parámetros."""
+    param_parts = []
     for key, value in params.items():
-        encoded_key = quote(str(key))
-        # No codificar 'where'
-        if key.lower() == "where":
-            encoded_value = value
-        else:
-            encoded_value = quote(str(value))
-        encoded_params.append(f"{encoded_key}={encoded_value}")
-    return f"{BASE_URL}{endpoint}?{'&'.join(encoded_params)}"
+        param_parts.append(f"{quote(str(key))}={value}")
+    return f"{BASE_URL}{endpoint}?{'&'.join(param_parts)}"
 
 def fetch_data(url, name):
     for attempt in range(MAX_RETRIES + 1):
