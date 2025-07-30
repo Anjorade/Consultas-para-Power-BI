@@ -36,7 +36,7 @@ QUERY_CONFIG = [
         "params": {
             "orderby": "ctxn_transaction_date desc",
             "take": "30000",
-            "where": "ctxn_movement_type ilike '261%25%' and (ctxn_transaction_date > current_date - 120) and ctxn_warehouse_code ilike '1145' and not (ctxn_primary_uom_code ilike 'Und')"
+            "where": "ctxn_item_code1 ilike '10007411'"
         }
     },
     {
