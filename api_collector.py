@@ -18,7 +18,8 @@ RETRY_DELAY = 10
 ENDPOINTS = {
     "Consulta_1": "System.MaterialTransactions.List.View1",
     "Consulta_2": "System.MaterialTransactions.List.View1",
-    "Consulta_3": "System.MaterialTransactions.List.View1"
+    "Consulta_3": "System.MaterialTransactions.List.View1",
+    "Consulta_4": "System.InventoryItems.List.View4"
 }
 
 # Configuración de las consultas corregidas
@@ -45,6 +46,12 @@ QUERY_CONFIG = [
             "orderby": "ctxn_transaction_date desc",
             "take": "30000",
             "where": "(ctxn_movement_type ilike '261%%') and (ctxn_transaction_date > current_date - 120) and (ctxn_warehouse_code ilike '1290')"  # Paréntesis añadidos para claridad
+        }
+    },
+        {
+        "name": "Consulta_4",
+        "params": {
+            "take": "20000"
         }
     }
 ]
