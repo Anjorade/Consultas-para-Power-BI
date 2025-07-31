@@ -6,8 +6,8 @@ from datetime import datetime
 from urllib.parse import quote
 
 # Configuración segura desde secretos
-TOKEN = "113912-128aa4dc-2404-11ef-af06-0eafd926738b"
-BASE_URL = "https://9cbdc90ib4.execute-api.us-west-2.amazonaws.com/prod/services/"
+TOKEN = os.getenv("API_TOKEN")
+BASE_URL = os.getenv("API_BASE_URL")
 HEADERS = {"token": TOKEN}
 
 MAX_RETRIES = 0
