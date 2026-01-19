@@ -251670,7 +251670,7 @@
         "citm_name1":"MELAMINICO SPAR PB FRESNO ANDINO 1.83X2.44X12",
         "csts_name":"MADERAS TORRES",
         "civi_entry_date":"2025-12-15",
-        "civi_primary_qty_reserved":0,
+        "civi_primary_qty_reserved":57,
         "civi_primary_qty":57,
         "civi_secondary_uom_code":null,
         "csbt_name":"Large Shelf",
@@ -251678,7 +251678,7 @@
         "citm_code2":null,
         "citm_code1":"10033771",
         "civi_organization_id":98,
-        "civi_primary_qty_available":57,
+        "civi_primary_qty_available":0,
         "civi_secondary_qty":null,
         "civi_stock_type_code":"01",
         "civi_warehouse_id":2,
@@ -284208,7 +284208,7 @@
         "citm_name1":"FLETES",
         "csts_name":"FLETES",
         "civi_entry_date":"2025-06-12",
-        "civi_primary_qty_reserved":25.218,
+        "civi_primary_qty_reserved":33.624,
         "civi_primary_qty":8128.5799999999,
         "civi_secondary_uom_code":null,
         "csbt_name":"Large Shelf",
@@ -284216,7 +284216,7 @@
         "citm_code2":null,
         "citm_code1":"10005779",
         "civi_organization_id":98,
-        "civi_primary_qty_available":8103.3619999999,
+        "civi_primary_qty_available":8094.9559999999,
         "civi_secondary_qty":null,
         "civi_stock_type_code":"01",
         "civi_warehouse_id":2,
@@ -285077,6 +285077,6 @@
     "metadata.resultset.skip":0,
     "metadata.Id":155,
     "metadata.Code":"System.InventoryItems.List.View4",
-    "load_timestamp":"2026-01-18T06:01:40.575172"
+    "load_timestamp":"2026-01-19T06:20:47.721110"
   }
 ]
